@@ -127,7 +127,7 @@ await mediator.Publish(new Ping());
 ## Filters
 
 Filters enables the ability to execute code before and/or after the actual handler is executed.  
-They can be used to inspect and/or modify the request/response and even terminate the execution pipeline.
+They can be used to inspect/validate/modify the event/request/response,  handle errors or short curcuit the execution pipeline.
 
 Filters are supported by both requests and events and must implement one of the filter interfaces
 
@@ -150,12 +150,53 @@ Filters are executed in ascending order and filters that doesn't provide an expl
 
 ## Customization (advanced usage)
 
-Request/event processing can be customized by providing custom request/event filter/handler providers.
+Event/request pipeline execution can be customized by decorating event and request classes with attributes inheriting from `[Event\Request]PipelineBuilderAttribute`.
 
-### Fan out
+The attribute will get access to a pipeline builder which can be used to customize the pipeline using any of the available methods:
+* `AddFilterSelector(...)`
+* `AddHandlerSelector(...)`
+* `UseHandlerExecutionStrategy(...)`
 
-Requests can be faned out by decorating the request type with `FanOutAttribute`. The response from the first handler that completes successfully will be used.
+These methods are used to select which filters/handlers to execute and set the execution strategy for how the handler(s) are executed.
+
+The following customizations are provided out of the box:
+* Event filter toggle
+* Event handler toggle
+* Request filter toggle
+* Request handler toggle
+* Request handler experiment
+
+### Toggles
+
+The toggle customizations can be used with continuous delivery allowing new implementations to be deployed along side the old ones and only executed in a controlled proportion of cases.
+
+One nice benefit of using this pattern is that there are no traces of the fact that we have multiple implementations of a filter/handler in the calling code.
+
+Types involved in implemenmting a toggle are:
+
+* `[Event/Request][Filter/Handler]ToggleAttribute`
+* `I[Event/Request][Filter/Handler]Toggle`
+
+The toggle attribute exposes an api to define
+
+* Filter/Handler type to execute if the toggle is enabled
+* Filter/Handler type to execute if the toggle is disabled (optional)
+* Toggle name (optional)
+* Tags (optional)
+
+The IToggle implementation is the one determining if the toggle is enabled or not.
+
+See `todo` for a sample implementation.
 
 ### Experiments
 
-todo
+The request handler experiment allows multiple implementation of a request handler to be executed and then compare the result, also a great feature to use when doing continuous delivery.
+
+Types used to implement an experiment are:
+
+* `RequestHandlerExperimentAttribute`
+* `IRequestHandlerExperimentToggle`
+* `IRequestHandlerExperimentObserver`
+* `IBackgroundExceptionHandler` (optional)
+
+See `todo` for a sample implementation.
