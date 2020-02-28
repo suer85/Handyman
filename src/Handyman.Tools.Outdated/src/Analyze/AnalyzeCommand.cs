@@ -1,6 +1,7 @@
 ﻿using Handyman.Tools.Outdated.Model;
 using McMaster.Extensions.CommandLineUtils;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Handyman.Tools.Outdated.Analyze
@@ -65,6 +66,7 @@ namespace Handyman.Tools.Outdated.Analyze
 
             _console.WriteLine("pre write to disk");
             WriteResultToFile(projects);
+            WriteDriveInfo();
             _console.WriteLine("post write to disk");
 
             return 0;
@@ -90,6 +92,24 @@ namespace Handyman.Tools.Outdated.Analyze
                 }
 
                 fileWriters.ForEach(x => x.Write(outputFile, projects));
+            }
+        }
+
+        private void WriteDriveInfo()
+        {
+            foreach (var driveName in new[] { "C", "D", "E" })
+            {
+                var driveInfo = new DriveInfo(driveName);
+
+                if (!driveInfo.IsReady)
+                    continue;
+
+                var freeSpacePercent = (driveInfo.AvailableFreeSpace / (float)driveInfo.TotalSize) * 100;
+
+                _console.WriteLine("Drive: {0} ({1}, {2})", driveInfo.Name, driveInfo.DriveFormat, driveInfo.DriveType);
+                _console.WriteLine("\tFree space:\t{0}", driveInfo.AvailableFreeSpace);
+                _console.WriteLine("\tTotal space:\t{0}", driveInfo.TotalSize);
+                _console.WriteLine("\tPercentage free space: {0:0.00}%.", freeSpacePercent);
             }
         }
     }
